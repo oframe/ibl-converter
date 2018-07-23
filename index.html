@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, minimal-ui, viewport-fit=cover, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+    <link rel="icon" type="image/png" href="src/assets/favicon.png">
+
+    <title>IBL Map Converter For PBR</title>
+    <link href="src/assets/main.css" rel="stylesheet">
+</head>
+<body>
+    <script type="module">
+        import { DragDrop } from './src/DragDrop.js';
+        import { loadHDR } from './src/HDRLoader.js';
+        import { renderSpecular, gl as glSpecular } from './src/Specular.js';
+        import { renderDiffuse, gl as glDiffuse } from './src/Diffuse.js';
+        import { writePNG } from './src/PNG.js';
+        import { saveAs } from './src/SaveAs.js';
+        import { initPBR, updateIBL } from './src/PBR.js';
+
+        {
+
+            // Store latest converted maps for downloading
+            const output = {};
+            let showLoader, hideLoader;
+
+            initUI();
+            initPBR();
+
+            function initUI() {
+                const instructions = new Image();
+                const support = new Image();
+                const download = new Image();
+                const loader = new Image();
+                instructions.src = './src/assets/ui/instructions.jpg';
+                support.src = './src/assets/ui/support.jpg';
+                download.src = './src/assets/ui/download.jpg';
+                loader.src = './src/assets/ui/loader.jpg';
+
+                document.body.appendChild(instructions);
+                document.body.appendChild(support);
+                document.body.appendChild(download);
+                document.body.appendChild(loader);
+                
+                Object.assign(instructions.style, {
+                    position: 'absolute',
+                    width: '70%',
+                    maxWidth: '800px',
+                    zIndex: 1,
+                    left: 0, right: 0, bottom: 0, top: 0,
+                    margin: 'auto',
+                    opacity: 0.95,
+                });
+
+                Object.assign(support.style, {
+                    position: 'absolute',
+                    width: '30%',
+                    maxWidth: '300px',
+                    zIndex: 1,
+                    left: '40px', bottom: '40px',
+                    display: 'none',
+                });
+
+                Object.assign(download.style, {
+                    position: 'absolute',
+                    width: '100px',
+                    zIndex: 1,
+                    right: '40px', bottom: '40px',
+                    cursor: 'pointer',
+                    display: 'none',
+                });
+
+                Object.assign(loader.style, {
+                    position: 'absolute',
+                    width: '100px',
+                    zIndex: 1,
+                    left: 0, right: 0, bottom: 0, top: 0,
+                    margin: 'auto',
+                    display: 'none',
+                });
+
+                // Save current output
+                download.addEventListener('click', () => {
+                    saveAs(output.diffuse.png, output.diffuse.filename);
+                    saveAs(output.specular.png, output.specular.filename);
+                }, false);
+
+                showLoader = function() {
+                    instructions.style.display = 'none';
+                    support.style.display = 'none';
+                    download.style.display = 'none';
+                    loader.style.display = 'block';
+                };
+                
+                hideLoader = function() {
+                    loader.style.display = 'none';
+                    support.style.display = 'block';
+                    download.style.display = 'block';
+                };
+            }
+
+            function glToPNG(gl, fileName) {
+                let w = gl.canvas.width;
+                let h = gl.canvas.height;
+                let data = new Uint8Array(w * h * 4);
+                gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, data);
+                const png = writePNG(w, h, data);
+                return png;
+            }
+
+            function loadImage(src) {
+                return new Promise((resolve) => {
+                    let image = new Image();
+                    image.onload = () => resolve({
+                        data: image,
+                        width: image.width,
+                        height: image.height,
+                    });
+                    image.src = src;
+                });
+            }
+
+            DragDrop.onDrop = async (buffer, name, ext) => {
+                showLoader();
+
+                // Delay a frame to allow loader to show
+                await new Promise(resolve => setTimeout(resolve, 10));
+
+                let data;
+                let fileEncoding;
+                switch (ext) {
+                    case 'hdr' :
+                        data = await loadHDR(buffer);
+                        data.inputType = 1;
+                        data.outputType = 2;
+                        fileEncoding = 'RGBM';
+                        break;
+                    case 'jpg' :
+                    case 'jpeg' :
+                    case 'png' :
+                        data = await loadImage(buffer);
+                        data.inputType = 0;
+                        data.outputType = 0;
+                        fileEncoding = 'sRGB';
+                        break;
+                    default :
+                        throw new Error('Not usable file type');
+                        break;
+                }
+
+                renderSpecular(data);
+                output.specular = {
+                    png: glToPNG(glSpecular),
+                    filename: `${name}-specular-${fileEncoding}.png`,
+                }
+                
+                renderDiffuse(data);
+                output.diffuse = {
+                    png: glToPNG(glDiffuse),
+                    filename: `${name}-diffuse-${fileEncoding}.png`,
+                }
+                
+                updateIBL(output.specular.png, output.diffuse.png, data.outputType);
+
+                hideLoader();
+            }
+        }
+    </script>
+</body>
+</html>
