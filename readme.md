@@ -22,7 +22,7 @@ Drag and drop an equirectangular environment map to generate the two necessary t
 Made for use with the [OGL PBR example](https://oframe.github.io/ogl/examples/?src=pbr.html) shader, however can be plugged into any framework.
 
 ### Supported input types: 
- - *.hdr (Radiance)*, which outputs a *.png* in *RGBM* format. This conversion takes the HDR (high dynamic range) values  and converts them into the RGBA channels of an 8bit PNG (8bit per channel = 32bits); the output PNG will likely look mostly transparent when previewed directly.
+ - *.hdr (Radiance/RGBE)*, which outputs a *.png* in *RGBM* format. This conversion takes the HDR (high dynamic range) values  and converts them into the RGBA channels of an 8bit PNG (8bit per channel = 32bits); the output PNG will likely look mostly transparent when previewed directly.
 
  - *.jpg/.png (sRGB)* bitmap, which outputs a *.png* in *sRGB* format. This is an SDR (standard dynamic range) format.
 
