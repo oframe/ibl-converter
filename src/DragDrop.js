@@ -30,19 +30,19 @@ function drop(e) {
 
     const reader = new FileReader();
 
-    reader.onload = function(e){
+    reader.onload = function (e) {
         const buffer = e.target.result;
 
         DragDrop.onDrop && DragDrop.onDrop(buffer, name, ext);
     };
-    
+
     switch (ext) {
-        case 'hdr' :   
+        case 'hdr':
+        case 'exr':
             reader.readAsArrayBuffer(file);
             break;
-        default :
+        default:
             reader.readAsDataURL(file);
             break;
     }
-
 }

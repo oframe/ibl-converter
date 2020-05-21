@@ -12,7 +12,8 @@
 <body>
     <script type="module">
         import { DragDrop } from './src/DragDrop.js';
-        import { loadHDR } from './src/HDRLoader.js';
+        import { parseHDR } from './src/HDRLoader.js';
+        import { parseEXR } from './src/EXRLoader.js';
         import { renderSpecular, gl as glSpecular } from './src/Specular.js';
         import { renderDiffuse, gl as glDiffuse } from './src/Diffuse.js';
         import { writePNG } from './src/PNG.js';
@@ -123,24 +124,30 @@
             DragDrop.onDrop = async (buffer, name, ext) => {
                 showLoader();
 
-                // Delay a frame to allow loader to show
+                // Delay a frame to allow loader to show before freezing main thread
                 await new Promise(resolve => setTimeout(resolve, 10));
 
                 let data;
                 let fileEncoding;
                 switch (ext) {
                     case 'hdr' :
-                        data = await loadHDR(buffer);
-                        data.inputType = 1;
-                        data.outputType = 2;
+                        data = parseHDR(buffer);
+                        data.inputType = 1; // RGBE
+                        data.outputType = 2; // RGBM
+                        fileEncoding = 'RGBM';
+                        break;
+                    case 'exr' :
+                        data = parseEXR(buffer);
+                        data.inputType = 1; // RGBE
+                        data.outputType = 2; // RGBM
                         fileEncoding = 'RGBM';
                         break;
                     case 'jpg' :
                     case 'jpeg' :
                     case 'png' :
                         data = await loadImage(buffer);
-                        data.inputType = 0;
-                        data.outputType = 0;
+                        data.inputType = 0; // SRGB
+                        data.outputType = 0; // SRGB
                         fileEncoding = 'sRGB';
                         break;
                     default :
