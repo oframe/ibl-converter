@@ -24,6 +24,8 @@ Made for use with the [OGL PBR example](https://oframe.github.io/ogl/examples/?s
 ### Supported input types: 
  - *.hdr (Radiance/RGBE)*, which outputs a *.png* in *RGBM* format. This conversion takes the HDR (high dynamic range) values  and converts them into the RGBA channels of an 8bit PNG (8bit per channel = 32bits); the output PNG will likely look mostly transparent when previewed directly.
 
+ - *.exr (OpenEXR)*, which outputs a *.png* in *RGBM* format. Same output as above.
+
  - *.jpg/.png (sRGB)* bitmap, which outputs a *.png* in *sRGB* format. This is an SDR (standard dynamic range) format.
 
  ### Output files:
@@ -39,6 +41,5 @@ eg. _**sky-diffuse-RGBM.png**_ and _**sky-specular-RGBM.png**_
 
 ## TODO
  - feature small library of pre-generated maps
- - Support .exr input format
  - Reduce artifacts at the poles
  - Allow user to select output type
